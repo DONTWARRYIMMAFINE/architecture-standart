@@ -1,0 +1,24 @@
+@startuml
+title Контейнеры системы управления ставками
+
+top to bottom direction
+
+!include <C4/C4_Container>
+
+Container(abs_calculation, "Модуль расчета ставок", "PL/SQL", "Генерация ставок в АБС")
+Container(kafka, "Брокер сообщений", "Kafka", "Топик: rates_updates")
+Container(rates_service, "Rates Service", ".NET 6", "Оркестрация ставок")
+ContainerDb(redis, "Кэш ставок", "Redis", "Актуальные ставки")
+Container(sftp, "SFTP сервер", "OpenSSH", "Хранение файлов")
+
+Container_Ext(call_center, "Система кол-центра", "Java", "Внутренняя CRM")
+Container_Ext(partner_system, "Система партнера", "Проприетарная", "Внешний кол-центр")
+
+Rel(abs_calculation, kafka, "Публикует обновления", "Kafka Producer")
+Rel(kafka, rates_service, "Consumes messages", "Kafka Consumer")
+Rel(rates_service, redis, "Синхронизация кэша", "TCP")
+Rel(rates_service, sftp, "Загружает файлы", "SFTP")
+Rel(call_center, rates_service, "Запрос ставок", "REST/HTTPS")
+Rel(partner_system, sftp, "Скачивает файлы", "SFTP")
+
+@enduml

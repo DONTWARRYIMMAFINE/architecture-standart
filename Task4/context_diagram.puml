@@ -1,0 +1,19 @@
+@startuml
+title Контекст интеграции кол-центров со ставками
+
+top to bottom direction
+
+!include <C4/C4_CONTEXT>
+SHOW_PERSON_OUTLINE()
+
+Person(operator, "Оператор кол-центра", "Консультирует клиентов")
+System(call_center, "Система кол-центра", "Java/Spring Boot")
+System(partner, "Партнерский кол-центр", "Внешняя система")
+System(абс, "АБС", "Ядро банковских операций")
+System(rates_service, "Rates Service", "Управление ставками")
+
+Rel(operator, call_center, "Запрос ставок", "UI")
+Rel(call_center, rates_service, "Получает данные", "REST API")
+Rel(rates_service, абс, "Синхронизация", "Kafka")
+Rel(rates_service, partner, "Отправляет файл", "SFTP")
+@enduml

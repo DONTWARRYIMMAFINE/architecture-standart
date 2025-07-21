@@ -1,0 +1,44 @@
+@startuml
+title Контейнеры системы открытия депозитов
+
+top to bottom direction
+
+!include <C4/C4_Container>
+SHOW_PERSON_OUTLINE()
+
+Person(client, "Клиент", "Пользователь банковских услуг")
+
+System_Boundary(online_systems, "Онлайн-системы") {
+    Container(site, "Сайт", "PHP/React.js", "Приём заявок от новых клиентов")
+    Container(web_ui, "Web UI", "ASP.NET MVC", "Интерфейс интернет-банка")
+    Container(api_gateway, "API Gateway", "Ocelot", "Маршрутизация запросов")
+    Container(deposit_service, "Deposit Service", ".NET 6", "Обработка депозитных операций")
+    Container(redis, "Кэш ставок", "Redis", "Хранение актуальных ставок")
+    Container(kafka, "Брокер сообщений", "Kafka", "Асинхронная интеграция")
+}
+
+System_Boundary(core_systems, "Ядерные системы") {
+    Container(abs_core, "Ядро АБС", "Delphi/Oracle", "Основные банковские операции")
+    Container(abs_calculation, "Модуль расчета ставок", "PL/SQL", "Автоматический расчёт ставок")
+    Container(crm, "Система кол-центра", "Java/Spring Boot", "Обработка обращений")
+    Container(sms_gw, "SMS-шлюз", "Собственная разработка", "Отправка уведомлений")
+}
+
+Rel(client, site, "Оставляет заявку", "HTTPS")
+Rel(client, web_ui, "Работает с интернет-банком", "HTTPS")
+Rel(site, api_gateway, "Передает данные заявки", "REST")
+Rel(web_ui, api_gateway, "Отправляет запросы", "REST")
+Rel(api_gateway, deposit_service, "Маршрутизирует запросы", "gRPC")
+Rel(deposit_service, redis, "Чтение/запись ставок", "TCP")
+Rel(deposit_service, kafka, "Отправка заданий в АБС", "Kafka Protocol")
+Rel(deposit_service, crm, "Создание задачи кол-центру", "REST")
+Rel(deposit_service, sms_gw, "Инициирование SMS", "REST")
+Rel(kafka, abs_core, "Приём заданий", "JDBC")
+Rel(abs_core, abs_calculation, "Расчет ставок", "PL/SQL")
+Rel(abs_calculation, redis, "Обновление кэша ставок", "TCP")
+Rel(abs_core, sms_gw, "Запрос на отправку SMS", "REST")
+Rel(crm, client, "Обратный звонок", "Телефония")
+
+Lay_D(api_gateway, deposit_service)
+Lay_R(deposit_service, kafka)
+@enduml
