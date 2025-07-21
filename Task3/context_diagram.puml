@@ -1,0 +1,24 @@
+@startuml
+title Контекст открытия депозитов (MVP)
+
+top to bottom direction
+
+!include <C4/C4_CONTEXT>
+SHOW_PERSON_OUTLINE()
+
+Person_Ext(client, "Клиент", "Новые и существующие клиенты банка")
+System(site, "Сайт банка", "Приём заявок от новых клиентов")
+System(online_bank, "Интернет-банк", "Открытие депозитов для существующих клиентов")
+System(abs, "АБС", "Автоматизированная банковская система")
+System(call_center, "Кол-центр", "Обработка заявок и консультации")
+System(sms, "SMS-шлюз", "Отправка уведомлений")
+
+Rel_R(client, site, "Оставляет заявку", "HTTPS")
+Rel(client, online_bank, "Открывает депозит", "HTTPS")
+Rel(site, call_center, "Передает заявку", "API")
+Rel(online_bank, abs, "Отправляет данные", "Асинхронно через Kafka")
+Rel(abs, sms, "Инициирует уведомление", "REST")
+Rel(sms, client, "Отправляет SMS", "SMPP")
+Rel(call_center, client, "Звонит для консультации", "Телефония")
+
+@enduml
